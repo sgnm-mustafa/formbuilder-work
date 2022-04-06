@@ -8,6 +8,7 @@ export default [
       { label: 'Facility', icon: 'pi pi-fw pi-pencil', to: '/facility' },
       { label: 'Classifications', icon: 'pi pi-fw pi-align-left', to: '/classifications' },
       { label: 'Form Builder', icon: 'pi pi-fw pi-book', to: '/formbuilder' },
+      { label: 'Form Generate', icon: 'pi pi-fw pi-book', to: '/formgenerate' },
     ],
   },
   // {

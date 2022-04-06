@@ -13,6 +13,7 @@ import FacilityFileImport from "./pages/FacilityFileImport";
 import ClassificationFileImport from "./pages/ClassificationFileImport";
 import FormBuilder from "./pages/FormBuilder/FormBuilder";
 import FormBuilderCreate from "./pages/FormBuilder/FormBuilderCreate";
+import FormGenerate from "./pages/FormBuilder/FormGenerate";
 // import Main from './pages/Main';
 
 export default function Router() {
@@ -25,6 +26,7 @@ export default function Router() {
         { path: "facility", element: <Facility /> },
         { path: "classifications", element: <Classifications /> },
         { path: "formbuilder", element: <FormBuilder /> },
+        { path: "formgenerate", element: <FormGenerate /> },
       ],
     },
     {
