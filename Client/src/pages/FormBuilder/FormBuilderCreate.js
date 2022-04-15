@@ -1,170 +1,80 @@
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
-import { InputTextarea } from "primereact/inputtextarea";
-import { Calendar } from "primereact/calendar";
-
-import React, { useEffect, useState, useRef } from "react";
+import { v4 as uuid } from "uuid";
+import { DragDropContext } from "react-beautiful-dnd";
+import React, { useState } from "react";
 import FormBuilderService from "../../services/formBuilder";
 import { useNavigate } from "react-router-dom";
-import { Checkbox } from "primereact/checkbox";
-
-const InputComponent = (props) => {
-  return (
-    <div key={props.index} className="field">
-      <InputText
-        placeholder="label"
-        className="block mb-2"
-        onChange={(e) => {
-          props.setItems((prevValue) => {
-            const temp = [...prevValue]
-            temp[props.index].label = e.target.value;
-            return temp;
-          });
-        }}
-        value={props.item.label}
-      />
-
-      <InputText disabled placeholder="value" />
-      <div className="my-2">
-        <Checkbox
-          inputId="cb1"
-          onChange={(e) => {
-            props.setItems((prevValue) => {
-              const temp = [...prevValue]
-              temp[props.index].required =
-                !temp[props.index].required;
-              return temp;
-            });
-          }}
-          checked={props.isRequired}
-        ></Checkbox>
-        <label htmlFor="cb1" className="p-checkbox-label">
-           isRequired
-        </label>
-      </div>
-    </div>
-  );
-};
-
-const InputTextareaComponent = (props) => {
-  return (
-    <div key={props.index} className="field">
-      <InputText
-        placeholder="label"
-        className="block mb-2"
-        onChange={(e) => {
-          props.setItems((prevValue) => {
-            const temp = [...prevValue]
-            temp[props.index].label = e.target.value;
-            return temp;
-          });
-        }}
-        value={props.item.label}
-      />
-
-      <InputTextarea disabled placeholder="value" />
-      <div className="my-2">
-        <Checkbox
-          inputId="cb1"
-          onChange={(e) => {
-            props.setItems((prevValue) => {
-              const temp = [...prevValue]
-              temp[props.index].required =
-                !temp[props.index].required;
-              return temp;
-            });
-          }}
-          checked={props.isRequired}
-        ></Checkbox>
-        <label htmlFor="cb1" className="p-checkbox-label">
-           isRequired
-        </label>
-      </div>
-    </div>
-  );
-};
-
-const CalendarComponent = (props) => {
-  return (
-    <div key={props.index} className="field">
-      <InputText
-        placeholder="label"
-        className="block mb-2"
-        onChange={(e) => {
-          props.setItems((prevValue) => {
-            prevValue[props.index].label = e.target.value;
-            return prevValue;
-          });
-        }}
-      />
-
-      <Calendar disabled placeholder="value" />
-    </div>
-  );
-};
+import Toolbox from "./ToolBox";
+import DropZone from "./DropZone";
+import { Card } from "primereact/card";
+import ITEMS from "./Items";
 
 function FormBuilderCreate() {
   const [items, setItems] = useState([]);
   const [formName, setFormName] = useState("");
   const navigate = useNavigate();
 
+  const reorder = (list, startIndex, endIndex) => {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+
+    return result;
+  };
+
+  const copy = (
+    source,
+    destination,
+    droppableSource,
+    droppableDestination,
+    isBase
+  ) => {
+    const sourceClone = Array.from(source);
+    const destClone = Array.from(destination);
+    const item = sourceClone[droppableSource.index];
+
+    if (isBase) {
+      destClone.splice(droppableDestination.index, 0, {
+        type: item.type,
+        label: "",
+        required: false,
+        id: uuid(),
+      });
+    } else {
+      console.log("Droppable dest ", droppableDestination);
+    }
+    return destClone;
+  };
+
+  const onDragEnd = (result) => {
+    const { source, destination } = result;
+
+    // dropped outside the list
+    if (!destination) {
+      return;
+    }
+    switch (source.droppableId) {
+      case destination.droppableId:
+        setItems((prevValue) =>
+          reorder(prevValue, source.index, destination.index)
+        );
+        break;
+      case "Toolbox":
+        setItems(copy(ITEMS, items, source, destination, true));
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
-    <>
+    <DragDropContext onDragEnd={onDragEnd}>
       <div className="grid">
-        <div className="col-3">
-          <div>
-            <Button
-              className="mt-5"
-              onClick={() => {
-                setItems([
-                  ...items,
-                  {
-                    type: "input",
-                    label: "",
-                    required: false,
-                  },
-                ]);
-              }}
-            >
-              Input
-            </Button>
-          </div>
-          <div>
-            <Button
-              className="mt-4"
-              onClick={() => {
-                setItems([
-                  ...items,
-                  {
-                    type: "textarea",
-                    label: "",
-                    required: false,
-                  },
-                ]);
-              }}
-            >
-              Text Area
-            </Button>
-          </div>
-          {/* <div>
-            <Button
-              className="mt-4"
-              onClick={() => {
-                setItems([
-                  ...items,
-                  {
-                    type: "date",
-                    label: "",
-                    required: false,
-                  },
-                ]);
-              }}
-            >
-              Date
-            </Button>
-          </div> */}
+        <div className="col-2">
+          <Toolbox />
         </div>
-        <div className="col-9">
+        <div className="col-8">
           <div className="field">
             <label className="block">Form Name</label>
             <InputText
@@ -172,40 +82,18 @@ function FormBuilderCreate() {
               onChange={(e) => setFormName(e.target.value)}
             />
           </div>
-          {items.map((item, index) => {
-            if (item.type === "input") {
-              return (
-                <InputComponent
-                  key={index}
-                  index={index}
-                  setItems={setItems}
-                  item={item}
-                  items={items}
-                  isRequired={item.required}
-                />
-              );
-            } else if (item.type === "textarea") {
-              return (
-                <InputTextareaComponent
-                  key={index}
-                  index={index}
-                  setItems={setItems}
-                  item={item}
-                  items={items}
-                  isRequired={item.required}
-                />
-              );
-            } else if (item.type === "date") {
-              return <CalendarComponent index={index} setItems={setItems} />;
-            }
-          })}
-
+          <Card>
+            <DropZone droppableId="form" items={items} setItems={setItems} />
+          </Card>
+        </div>
+        <div className="col-2">
           <Button
             onClick={() => {
               const data = {
                 name: formName,
                 items: items,
               };
+              console.log(data);
               FormBuilderService.create(data).then((res) => {
                 navigate("/formbuilder");
               });
@@ -215,7 +103,7 @@ function FormBuilderCreate() {
           </Button>
         </div>
       </div>
-    </>
+    </DragDropContext>
   );
 }
 
